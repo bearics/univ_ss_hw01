@@ -6,6 +6,14 @@
 
 int main(void)
 {
+	// init ready, wait queue	
+	ReadyQHead = NULL;
+	ReadyQTail = NULL;
+
+	WaitQHead = NULL;
+	WaitQTai = NULL;
+
 	
+
 }
 

@@ -30,8 +30,8 @@ typedef struct _Thread {
 } Thread;	
 
 typedef struct __wrapperArg {
-   void*  (*funcPtr)(void*);
-   void* funcArg;
+	void*  (*funcPtr)(void*);
+	void* funcArg;
 } WrapperArg;
 
 
@@ -43,14 +43,17 @@ Thread*		ReadyQTail;
 Thread*		WaitQHead;
 Thread*		WaitQTai;
 
-
+/* thread functions */
 int 		thread_create(thread_t *thread, thread_attr_t *attr, void *(*start_routine) (void *), void *arg);
 int 		thread_join(thread_t thread, void **retval);
 int 		thread_suspend(thread_t tid);
 int			thread_resume(thread_t tid);
 thread_t 	thread_self();
 
-
+/* doubly linked list functions */
+Thread* createNode(pthread_t tid);
+void	insertAtTail(Thread* head, pthread_t tid);
+void	print(Thread* head);
 
 
 #endif /* __THREAD_H__ */
