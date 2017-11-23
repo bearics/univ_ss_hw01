@@ -1,14 +1,8 @@
 #include "Thread.h"
 #include "Init.h"
 #include "Scheduler.h"
-
-/* head and tail pointers for ready queue */ 
-ReadyQHead = NULL;
-ReadyQTail = NULL;
-
-/* head and tail pointers for waiting queue */
-WaitQHead = NULL;
-WaitQTai = NULL;
+#include <stdlib.h>
+#include <stdio.h>
 
 
 int 	thread_create(thread_t *thread, thread_attr_t *attr, void *(*start_routine) (void *), void *arg)
@@ -51,18 +45,43 @@ Thread* createNode(pthread_t tid)
 	return newNode;
 }
 
-void	insertAtTail(Thread* head, pthread_t tid)
+void	insertAtTail(Thread** head, pthread_t tid)
 {
-	Thread* temp = head;
+	Thread* temp = *head;
 	Thread* newNode = createNode(tid);
-	if(head == NULL)
+	if(*head == NULL)
 	{
-		head = newNode;
+		*head = newNode;
 		return;
 	}
-	while(temp->next != NULL)
-		temp=temp->next;
-	temp->next = newNode;
-	newNode->prev = temp;
+	while(temp->pNext != NULL)
+		temp=temp->pNext;
+	temp->pNext = newNode;
+	newNode->pPrev = temp;
+}
 
+void deleteAtFirst(Thread** head)
+{
+	Thread* temp = *head;
+	if(*head == NULL)
+		return;
+	(*head)->pNext = ((*head)->pNext)->pNext;
+	free(temp->pNext);
+	return;
+}
+
+void print(Thread** head)
+{
+	Thread* temp = *head;
+	printf("Head  (%p) > ", *head);
+	int i=0;
+	while(temp != NULL)
+	{
+		if( i != 0)
+			printf("node%2d(%p) > ",i, temp);
+		printf("Prev : %p,  \tNext : %p\n",  temp->pPrev, temp->pNext);
+		temp = temp->pNext;
+		i++;
+	}
+	printf("\n");
 }

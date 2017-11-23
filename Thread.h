@@ -7,6 +7,11 @@
 
 #define TIMESLICE	(2)
 
+typedef enum{
+	WAITING_QUEUE = 0,
+	READY_QUEUE = 1,
+}Queue;
+
 
 typedef int BOOL;
 typedef pthread_t	thread_t;
@@ -19,6 +24,7 @@ typedef enum{
 	THREAD_STATUS_BLOCKED = 2,
 }ThreadStatus;
 
+typedef struct _Thread Thread;
 typedef struct _Thread {
 	ThreadStatus			status;
 	pthread_t			tid;
@@ -41,7 +47,7 @@ Thread*		ReadyQTail;
 
 /* head and tail pointers for waiting queue */
 Thread*		WaitQHead;
-Thread*		WaitQTai;
+Thread*		WaitQTail;
 
 /* thread functions */
 int 		thread_create(thread_t *thread, thread_attr_t *attr, void *(*start_routine) (void *), void *arg);
@@ -52,8 +58,9 @@ thread_t 	thread_self();
 
 /* doubly linked list functions */
 Thread* createNode(pthread_t tid);
-void	insertAtTail(Thread* head, pthread_t tid);
-void	print(Thread* head);
+void	insertAtTail(Thread** head, pthread_t tid);
+void	deleteAtFirst(Thread** head);
+void	print(Queue queue);
 
 
 #endif /* __THREAD_H__ */

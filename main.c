@@ -11,9 +11,23 @@ int main(void)
 	ReadyQTail = NULL;
 
 	WaitQHead = NULL;
-	WaitQTai = NULL;
+	WaitQTail = NULL;
 
-	
+	pthread_t tid;
+	insertAtTail(&ReadyQHead, tid);
+	insertAtTail(&ReadyQHead, tid);
+	insertAtTail(&ReadyQHead, tid);
+	insertAtTail(&ReadyQHead, tid);
+	insertAtTail(&ReadyQHead, tid);
+	insertAtTail(&ReadyQHead, tid);
+	deleteAtFirst(&ReadyQHead);
+	print(&ReadyQHead);
+
+	deleteAtFirst(&ReadyQHead);
+	print(&ReadyQHead);
+
+	deleteAtFirst(&ReadyQHead);
+	print(&ReadyQHead);
 
 }
 
