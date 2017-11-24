@@ -58,8 +58,9 @@ thread_t 	thread_self();
 
 /* doubly linked list functions */
 Thread* createNode(pthread_t tid);
-void	insertAtTail(Thread** head, pthread_t tid);
-void	deleteAtFirst(Thread** head);
+Thread**	selectQueue(Queue queue);
+void	insertAtTail(Queue queue, pthread_t tid);
+void	deleteAtFirst(Queue queue);
 void	print(Queue queue);
 
 

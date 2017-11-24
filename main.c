@@ -14,20 +14,20 @@ int main(void)
 	WaitQTail = NULL;
 
 	pthread_t tid;
-	insertAtTail(&ReadyQHead, tid);
-	insertAtTail(&ReadyQHead, tid);
-	insertAtTail(&ReadyQHead, tid);
-	insertAtTail(&ReadyQHead, tid);
-	insertAtTail(&ReadyQHead, tid);
-	insertAtTail(&ReadyQHead, tid);
-	deleteAtFirst(&ReadyQHead);
-	print(&ReadyQHead);
+	insertAtTail(READY_QUEUE, tid);
+	insertAtTail(READY_QUEUE, tid);
+	insertAtTail(READY_QUEUE, tid);
+	insertAtTail(READY_QUEUE, tid);
+	insertAtTail(READY_QUEUE, tid);
+	insertAtTail(READY_QUEUE, tid);
+	deleteAtFirst(READY_QUEUE);
+	print(READY_QUEUE);
 
-	deleteAtFirst(&ReadyQHead);
-	print(&ReadyQHead);
+	deleteAtFirst(READY_QUEUE);
+	print(READY_QUEUE);
 
-	deleteAtFirst(&ReadyQHead);
-	print(&ReadyQHead);
+	deleteAtFirst(READY_QUEUE);
+	print(READY_QUEUE);
 
 }
 

@@ -38,50 +38,69 @@ thread_t	thread_self()
 
 
 /* doubly linked list functions */
+Thread**	selectQueue(Queue queue)
+{
+	if( queue == READY_QUEUE )
+		return &ReadyQHead;
+	else if(queue == WAITING_QUEUE)
+		return &WaitQHead;
+}
+
 Thread* createNode(pthread_t tid)
 {
 	Thread* newNode = (Thread*)malloc(sizeof(Thread));
+	newNode->pNext = NULL;
+	newNode->pPrev = NULL;
 	newNode->tid = tid;
 	return newNode;
 }
 
-void	insertAtTail(Thread** head, pthread_t tid)
+void	insertAtTail(Queue queue, pthread_t tid)
 {
-	Thread* temp = *head;
+	Thread** pHead = selectQueue(queue);
 	Thread* newNode = createNode(tid);
-	if(*head == NULL)
+	if(*pHead == NULL)
 	{
-		*head = newNode;
+		*pHead = newNode;
+		newNode->pPrev = *pHead;
 		return;
 	}
+	Thread* temp = *pHead;
 	while(temp->pNext != NULL)
 		temp=temp->pNext;
 	temp->pNext = newNode;
 	newNode->pPrev = temp;
 }
 
-void deleteAtFirst(Thread** head)
+void deleteAtFirst(Queue queue)
 {
+	Thread** head;
+	if( queue == READY_QUEUE )
+		head = &ReadyQHead;
+	else if(queue == WAITING_QUEUE)
+		head = &WaitQHead;
 	Thread* temp = *head;
-	if(*head == NULL)
+	if(head == NULL)
 		return;
 	(*head)->pNext = ((*head)->pNext)->pNext;
 	free(temp->pNext);
 	return;
 }
 
-void print(Thread** head)
+void print(Queue queue)
 {
-	Thread* temp = *head;
-	printf("Head  (%p) > ", *head);
+	Thread** pHead = selectQueue(queue);
+
+	printf("Head  (%p) > ", *pHead);
 	int i=0;
-	while(temp != NULL)
+	while(*pHead != NULL)
 	{
 		if( i != 0)
-			printf("node%2d(%p) > ",i, temp);
-		printf("Prev : %p,  \tNext : %p\n",  temp->pPrev, temp->pNext);
-		temp = temp->pNext;
+			printf("node%2d(%p) > ",i, pHead);
+		printf("Prev : %p,  \tNext : %p\n",  (*pHead)->pPrev, (*pHead)->pNext);
+		(*pHead) = (*pHead)->pNext;
 		i++;
 	}
 	printf("\n");
+
 }
