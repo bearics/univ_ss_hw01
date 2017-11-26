@@ -38,12 +38,20 @@ thread_t	thread_self()
 
 
 /* doubly linked list functions */
-Thread**	selectQueue(Queue queue)
+Thread**	selectQHead(Queue queue)
 {
 	if( queue == READY_QUEUE )
 		return &ReadyQHead;
 	else if(queue == WAITING_QUEUE)
 		return &WaitQHead;
+}
+
+Thread**	selectQTail(Queue queue)
+{
+	if( queue == READY_QUEUE )
+		return &ReadyQTail;
+	else if(queue == WAITING_QUEUE)
+		return &WaitQTail;
 }
 
 Thread* createNode(pthread_t tid)
@@ -57,12 +65,12 @@ Thread* createNode(pthread_t tid)
 
 void	insertAtTail(Queue queue, pthread_t tid)
 {
-	Thread** pHead = selectQueue(queue);
+	Thread** pHead = selectQHead(queue);
+	Thread** pTail = selectQTail(queue);
 	Thread* newNode = createNode(tid);
 	if(*pHead == NULL)
 	{
 		*pHead = newNode;
-		newNode->pPrev = *pHead;
 		return;
 	}
 	Thread* temp = *pHead;
@@ -70,37 +78,34 @@ void	insertAtTail(Queue queue, pthread_t tid)
 		temp=temp->pNext;
 	temp->pNext = newNode;
 	newNode->pPrev = temp;
+	*pTail = newNode;
 }
 
 void deleteAtFirst(Queue queue)
 {
-	Thread** head;
-	if( queue == READY_QUEUE )
-		head = &ReadyQHead;
-	else if(queue == WAITING_QUEUE)
-		head = &WaitQHead;
-	Thread* temp = *head;
-	if(head == NULL)
+	Thread** pHead = selectQHead(queue);
+	Thread* temp = *pHead;
+	if(*pHead == NULL)
 		return;
-	(*head)->pNext = ((*head)->pNext)->pNext;
-	free(temp->pNext);
+	(*pHead) = (*pHead)->pNext;
+	(*pHead)->pPrev = NULL;
+	free(temp);
 	return;
 }
 
 void print(Queue queue)
 {
-	Thread** pHead = selectQueue(queue);
-
-	printf("Head  (%p) > ", *pHead);
+	Thread** pHead = selectQHead(queue);
+	Thread** pTail = selectQTail(queue);
+	Thread* temp = *pHead;
+	printf("Head(%p)\t Tail(%p)\n", *pHead, *pTail);
 	int i=0;
-	while(*pHead != NULL)
+	while(temp != NULL)
 	{
-		if( i != 0)
-			printf("node%2d(%p) > ",i, pHead);
-		printf("Prev : %p,  \tNext : %p\n",  (*pHead)->pPrev, (*pHead)->pNext);
-		(*pHead) = (*pHead)->pNext;
+		printf("node%2d(%p) > ",i, temp);
+		printf("Prev : %p,  \tNext : %p\n",  temp->pPrev, temp->pNext);
+		temp = temp->pNext;
 		i++;
 	}
 	printf("\n");
-
 }
