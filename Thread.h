@@ -4,6 +4,8 @@
 #include <pthread.h>
 
 
+#define FALSE 0
+#define TRUE 1
 
 #define TIMESLICE	(2)
 
@@ -11,7 +13,6 @@ typedef enum{
 	WAITING_QUEUE = 0,
 	READY_QUEUE = 1,
 }Queue;
-
 
 typedef int BOOL;
 typedef pthread_t	thread_t;
@@ -50,17 +51,23 @@ Thread*		WaitQHead;
 Thread*		WaitQTail;
 
 /* thread functions */
+
 int 		thread_create(thread_t *thread, thread_attr_t *attr, void *(*start_routine) (void *), void *arg);
 int 		thread_join(thread_t thread, void **retval);
 int 		thread_suspend(thread_t tid);
 int			thread_resume(thread_t tid);
 thread_t 	thread_self();
+Thread* __getThread();
 
 /* doubly linked list functions */
+void* foo1(void* arg);
+void* foo2(void* arg);
+
 Thread* createNode(pthread_t tid);
 Thread**	selectQueue(Queue queue);
 void	insertAtTail(Queue queue, pthread_t tid);
 void	deleteAtFirst(Queue queue);
+Thread* searchQueue(Queue queue, pthread_t tid);
 void	print(Queue queue);
 
 
