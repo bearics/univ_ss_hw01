@@ -14,13 +14,23 @@
 // } WrapperArg;
 
 
-
-
-void *child(void *arg) {
-	printf("child\n");
+void *child1(void *arg) {
+	while(1)
+		printf("child 1\n");
 	return NULL;
 }
 
+void *child2(void *arg) {
+	while(1)
+		printf("child 2\n");
+	return NULL;
+}
+
+void *child3(void *arg) {
+	while(1)
+		printf("child 3\n");
+	return NULL;
+}
 
 
 int main(void)
@@ -38,11 +48,9 @@ int main(void)
 	printf("main tid : %u\n", pthread_self());
 	int a=-1;
 	//a= pthread_create(&c, NULL,__wrapperFunc,&wrapperArg);
-	a= thread_create(&c, NULL,child,10);
-	sleep(3);
-	a= thread_create(&c, NULL,child,10);
-	sleep(1);
-	a= thread_create(&c, NULL,child,10);
+	a= thread_create(&c, NULL,child1,10);
+	a= thread_create(&c, NULL,child2,10);	
+	a= thread_create(&c, NULL,child3,10);
 	int status;
 	printf("kill SIGUSR1\n");
 	print(READY_QUEUE);

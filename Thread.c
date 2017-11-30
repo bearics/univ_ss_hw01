@@ -19,11 +19,18 @@ void *__wrapperFunc(void* arg)
 	}
 	// child is ready to run & sleep
 	__thread_wait_handler(0);
-	printf("dddd");
 
 	// Run child function 
 	ret = (*pArg->funcPtr)(pArg->funcArg);
 	return ret;
+}
+
+void __thread_wakeup(Thread* pTh)
+{
+	pthread_mutex_lock(&(pTh->readyMutex));
+	pTh->bRunable = TRUE;
+	pthread_cond_signal(&(pTh->readyCond));
+	pthread_mutex_unlock(&(pTh->readyMutex));
 }
 
 void __thread_wait_handler(int signo)
@@ -31,7 +38,7 @@ void __thread_wait_handler(int signo)
 	Thread* pTh;
 	pTh = __getThread(pthread_self());
 	pthread_mutex_lock(&(pTh->readyMutex));
-	printf("bye Im sleep\n");
+	printf("bye Im sleep tid : %u \n", pthread_self());
 	while (pTh->bRunnable == FALSE) {}
 	pthread_cond_wait(&(pTh->readyCond), &(pTh->readyMutex));
 	pthread_mutex_unlock(&(pTh->readyMutex));
@@ -194,7 +201,7 @@ void print(Queue queue)
 	while(temp != NULL)
 	{
 		printf("\nnode%2d(%p) ------------------------------------------------\n",i, temp);
-		printf(" *  Prev : %p,  \tNext : %p,     \ttid: %d\n *  status : %d,  \tbRunnable : %d\n",  temp->pPrev, temp->pNext, temp->tid, temp->status, temp->bRunnable);
+		printf(" *  Prev : %p,  \tNext : %p,     \ttid: %u\n *  status : %d,  \tbRunnable : %d\n",  temp->pPrev, temp->pNext, temp->tid, temp->status, temp->bRunnable);
 		temp = temp->pNext;
 		i++;
 	}
