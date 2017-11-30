@@ -21,24 +21,7 @@ void *child(void *arg) {
 	return NULL;
 }
 
-void *__wrapperFunc(void* arg)
-{
 
-	void* ret;
-	WrapperArg* pArg = (WrapperArg*)arg;
-	
-	// child waiting until TCB is initialized
-	while(__getThread(pthread_self()) == (Thread *)(-1)) {
-		printf("not yet!\n");
-	}
-	// child is ready to run & sleep
-	__thread_wait_handler(0);
-	printf("dddd");
-
-	// Run child function 
-	ret = (*pArg->funcPtr)(pArg->funcArg);
-	return ret;
-}
 
 int main(void)
 {
@@ -52,17 +35,14 @@ int main(void)
 // 	RunScheduler();
 
 	pthread_t c;
-	WrapperArg wrapperArg;
-	wrapperArg.funcPtr = child;
-	wrapperArg.funcArg = 10;
-	printf("main tid : %d\n", pthread_self());
+	printf("main tid : %u\n", pthread_self());
 	int a=-1;
 	//a= pthread_create(&c, NULL,__wrapperFunc,&wrapperArg);
-	a= thread_create(&c, NULL,__wrapperFunc,&wrapperArg);
+	a= thread_create(&c, NULL,child,10);
 	sleep(3);
-	a= thread_create(&c, NULL,__wrapperFunc,&wrapperArg);
+	a= thread_create(&c, NULL,child,10);
 	sleep(1);
-	a= thread_create(&c, NULL,__wrapperFunc,&wrapperArg);
+	a= thread_create(&c, NULL,child,10);
 	int status;
 	printf("kill SIGUSR1\n");
 	print(READY_QUEUE);

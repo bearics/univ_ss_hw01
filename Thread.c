@@ -7,6 +7,25 @@
 #include <pthread.h>
 #include <errno.h>
 
+void *__wrapperFunc(void* arg)
+{
+
+	void* ret;
+	WrapperArg* pArg = (WrapperArg*)arg;
+	
+	// child waiting until TCB is initialized
+	while(__getThread(pthread_self()) == NULL) {
+		printf("not yet!\n");
+	}
+	// child is ready to run & sleep
+	__thread_wait_handler(0);
+	printf("dddd");
+
+	// Run child function 
+	ret = (*pArg->funcPtr)(pArg->funcArg);
+	return ret;
+}
+
 void __thread_wait_handler(int signo)
 {
 	Thread* pTh;
@@ -21,7 +40,11 @@ void __thread_wait_handler(int signo)
 int 	thread_create(thread_t *thread, thread_attr_t *attr, void *(*start_routine) (void *), void *arg)
 {
 
-	pthread_create(&thread, attr, start_routine, arg);
+	WrapperArg wrapperArg;
+	wrapperArg.funcPtr = start_routine;
+	wrapperArg.funcArg = arg;
+
+	pthread_create(&thread, attr, __wrapperFunc,&wrapperArg);
 	insertAtTail(READY_QUEUE, thread);	// insert readyQ
 	
 	
@@ -37,9 +60,9 @@ int 	thread_create(thread_t *thread, thread_attr_t *attr, void *(*start_routine)
     }
 */
 
-	printf("add thread : %d\n", thread);
+	printf("add thread : %u\n", thread);
 
-	printf("send signal to thread(%d) SIGUSR1\n", thread);
+	printf("send signal to thread(%u) SIGUSR1\n", thread);
 
 	
 }
@@ -157,10 +180,7 @@ Thread* searchQueue(Queue queue, pthread_t tid)
 			break;
 		temp=temp->pNext;
 	}
-	if(temp == NULL)
-		return (Thread*)(-1);
-	else
-		return temp;
+	return temp;
 }
 
 void print(Queue queue)
