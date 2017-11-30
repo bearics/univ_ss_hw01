@@ -12,10 +12,11 @@ void *__wrapperFunc(void* arg)
 
 	void* ret;
 	WrapperArg* pArg = (WrapperArg*)arg;
+	printf("self : %u\n", pthread_self());
 	
 	// child waiting until TCB is initialized
 	while(__getThread(pthread_self()) == NULL) {
-		printf("not yet!\n");
+	//	printf("not yet!\n");
 	}
 	// child is ready to run & sleep
 	__thread_wait_handler(0);
@@ -28,7 +29,7 @@ void *__wrapperFunc(void* arg)
 void __thread_wakeup(Thread* pTh)
 {
 	pthread_mutex_lock(&(pTh->readyMutex));
-	pTh->bRunable = TRUE;
+	pTh->bRunnable = TRUE;
 	pthread_cond_signal(&(pTh->readyCond));
 	pthread_mutex_unlock(&(pTh->readyMutex));
 }
@@ -37,10 +38,10 @@ void __thread_wait_handler(int signo)
 {
 	Thread* pTh;
 	pTh = __getThread(pthread_self());
+	// printf("bye Im sleep tid : %u \n", pthread_self());
 	pthread_mutex_lock(&(pTh->readyMutex));
-	printf("bye Im sleep tid : %u \n", pthread_self());
-	while (pTh->bRunnable == FALSE) {}
-	pthread_cond_wait(&(pTh->readyCond), &(pTh->readyMutex));
+	while (pTh->bRunnable == FALSE)
+		pthread_cond_wait(&(pTh->readyCond), &(pTh->readyMutex));
 	pthread_mutex_unlock(&(pTh->readyMutex));
 }
 
@@ -51,9 +52,9 @@ int 	thread_create(thread_t *thread, thread_attr_t *attr, void *(*start_routine)
 	wrapperArg.funcPtr = start_routine;
 	wrapperArg.funcArg = arg;
 
-	pthread_create(&thread, attr, __wrapperFunc,&wrapperArg);
-	insertAtTail(READY_QUEUE, thread);	// insert readyQ
-	
+	pthread_create(thread, attr, __wrapperFunc,&wrapperArg);
+	insertAtTail(READY_QUEUE, *thread);	// insert readyQ
+	printf("hi : %u \n", *thread);
 	
 /*
 	int status = pthread_kill(thread,SIGUSR1);	// wake child function
@@ -75,8 +76,10 @@ int 	thread_create(thread_t *thread, thread_attr_t *attr, void *(*start_routine)
 }
 
 
-int 	thread_join(thread_t thread, void **retval)
+int 	thread_join(thread_t tid, void **retval)
 {
+	Thread* pTh = __getThread(tid);
+	pTh->status = THREAD_STATUS_READY;
 
 }
 
@@ -100,7 +103,7 @@ thread_t	thread_self()
 	return pthread_self();
 }	
 
-Thread* __getThread(pthread_t tid)
+Thread* __getThread(thread_t tid)
 {
 	return searchQueue(READY_QUEUE, tid);
 }
@@ -123,7 +126,7 @@ Thread**	selectQTail(Queue queue)
 		return &WaitQTail;
 }
 
-Thread* createNode(pthread_t tid)
+Thread* createNode(thread_t tid)
 {
 	Thread* newNode = (Thread*)malloc(sizeof(Thread));
 
@@ -141,7 +144,7 @@ Thread* createNode(pthread_t tid)
 }
 
 
-void	insertAtTail(Queue queue, pthread_t tid)
+void	insertAtTail(Queue queue, thread_t tid)
 {
 	Thread** pHead = selectQHead(queue);
 	Thread** pTail = selectQTail(queue);
@@ -157,6 +160,67 @@ void	insertAtTail(Queue queue, pthread_t tid)
 	temp->pNext = newNode;
 	newNode->pPrev = temp;
 	*pTail = newNode;
+
+	return;
+}
+
+void pushAtTail(Queue queue, Thread* th)
+{
+	Thread** pHead = selectQHead(queue);	
+	Thread** pTail = selectQTail(queue);
+	th = *pTail;
+
+
+
+}
+
+Thread* popAtFirst(Queue queue)
+{
+	Thread** pHead = selectQHead(queue);
+	Thread* temp = *pHead;
+
+	if(*pHead == NULL)
+		return NULL;	// nothing in queue
+	temp = temp->pNext;
+	*pHead = temp;
+	if(*pHead != NULL)	// one or mores node in queue
+		(*pHead)->pPrev = NULL;	// set 1's node's pPrev
+	return temp;	// return 1's node
+}
+
+void deleteNode(Queue queue, thread_t tid)
+{
+	Thread** pHead = selectQHead(queue);
+	Thread** pTail = selectQTail(queue);
+	Thread* cur = *pHead;
+	Thread* pre = NULL;
+
+	if( *pHead == NULL )
+		return;
+
+	while(cur->tid != tid)
+	{
+		if(cur->pNext == NULL)
+			return;	// can't find tid
+		else
+		{
+			pre = cur;	// save current node
+			cur = cur->pNext;
+		}
+	}
+
+	if(cur == *pHead)
+		*pHead = (*pHead)->pNext;
+	else
+		cur->pPrev->pNext = cur->pNext;
+
+	if(cur == *pTail)
+		*pTail = cur->pPrev;
+	else
+		cur->pNext->pPrev = cur->pPrev;
+
+	free(cur);	// delete node(tid)
+	return;
 }
 
 void deleteAtFirst(Queue queue)
@@ -177,7 +241,7 @@ void deleteAtFirst(Queue queue)
 	return;
 }
 
-Thread* searchQueue(Queue queue, pthread_t tid)
+Thread* searchQueue(Queue queue, thread_t tid)
 {
 	Thread** pHead = selectQHead(queue);
 	Thread* temp = *pHead;

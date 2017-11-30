@@ -23,16 +23,18 @@ typedef enum{
 	THREAD_STATUS_RUN = 0,
 	THREAD_STATUS_READY = 1,
 	THREAD_STATUS_BLOCKED = 2,
+	THREAD_STATUS_ZOMBIE = 3
 }ThreadStatus;
 
 typedef struct _Thread Thread;
 typedef struct _Thread {
-	ThreadStatus			status;
-	pthread_t			tid;
+	ThreadStatus		status;
+	void* 				pExitCode;
+	thread_t			tid;
 	pthread_cond_t     		readyCond;
 	BOOL				bRunnable;
 	pthread_mutex_t   		readyMutex;
-	pthread_t			parentTid;
+	thread_t			parentTid;
 	Thread*				pPrev;
 	Thread*				pNext;
 } Thread;	
@@ -64,11 +66,11 @@ Thread* __getThread();
 void* foo1(void* arg);
 void* foo2(void* arg);
 
-Thread* createNode(pthread_t tid);
+Thread* createNode(thread_t tid);
 Thread**	selectQueue(Queue queue);
-void	insertAtTail(Queue queue, pthread_t tid);
+void	insertAtTail(Queue queue, thread_t tid);
 void	deleteAtFirst(Queue queue);
-Thread* searchQueue(Queue queue, pthread_t tid);
+Thread* searchQueue(Queue queue, thread_t tid);
 void	print(Queue queue);
 
 
