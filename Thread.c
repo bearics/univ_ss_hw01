@@ -86,17 +86,40 @@ int 	thread_join(thread_t tid, void **retval)
 
 int 	thread_suspend(thread_t tid)
 {
+	insertAtTail(WAITING_QUEUE, tid);
+	
+	Thread* readyNode = searchQueue(READY_QUEUE, tid);	// find TCB in waiting queue
+	Thread* waitNode = searchQueue(WAITING_QUEUE, tid);	// find TCB in waiting queue
 
+	if(readyNode == NULL || waitNode == NULL )
+		return -1; // fail to find tid in Q
+
+	copyNode(readyNode,waitNode); // copy Node
+	waitNode->status = THREAD_STATUS_BLOCKED;
+	
+	if(deleteNode(READY_QUEUE, tid) < 0 )
+		return -1;	// fail to delete node
+	return 0;	// success!
 }
 
 
 int	thread_resume(thread_t tid)
 {
+	insertAtTail(READY_QUEUE, tid);
 
+	Thread* readyNode = searchQueue(READY_QUEUE, tid);	// find TCB in waiting queue
+	Thread* waitNode = searchQueue(WAITING_QUEUE, tid);	// find TCB in waiting queue
+
+	if(readyNode == NULL || waitNode == NULL )
+		return -1; // fail to find tid in Q
+
+	copyNode(waitNode, readyNode); // copy Node
+	readyNode->status = THREAD_STATUS_BLOCKED;
+
+	if(deleteNode(WAITING_QUEUE, tid) < 0 )
+		return -1;	// fail to delete node
+	return 0;	// success!
 }
-
-
-
 
 thread_t	thread_self()
 {
@@ -107,7 +130,6 @@ Thread* __getThread(thread_t tid)
 {
 	return searchQueue(READY_QUEUE, tid);
 }
-
 
 /* doubly linked list functions */
 Thread**	selectQHead(Queue queue)
@@ -132,10 +154,11 @@ Thread* createNode(thread_t tid)
 
 	/* initialize Thread struct */
 	newNode->status = THREAD_STATUS_READY;
+	newNode->pExitCode = (void*)0;
 	newNode->tid = tid;
 	newNode->parentTid = pthread_self();
 	pthread_cond_init(&(newNode->readyCond), NULL);
-	newNode->bRunnable = 0;
+	newNode->bRunnable = FALSE;
 	pthread_mutex_init(&(newNode->readyMutex), NULL);
 	newNode->pNext = NULL;
 	newNode->pPrev = NULL;
@@ -164,16 +187,6 @@ void	insertAtTail(Queue queue, thread_t tid)
 	return;
 }
 
-void pushAtTail(Queue queue, Thread* th)
-{
-	Thread** pHead = selectQHead(queue);	
-	Thread** pTail = selectQTail(queue);
-	th = *pTail;
-
-
-
-}
-
 Thread* popAtFirst(Queue queue)
 {
 	Thread** pHead = selectQHead(queue);
@@ -188,7 +201,7 @@ Thread* popAtFirst(Queue queue)
 	return temp;	// return 1's node
 }
 
-void deleteNode(Queue queue, thread_t tid)
+int deleteNode(Queue queue, thread_t tid)
 {
 	Thread** pHead = selectQHead(queue);
 	Thread** pTail = selectQTail(queue);
@@ -196,12 +209,12 @@ void deleteNode(Queue queue, thread_t tid)
 	Thread* pre = NULL;
 
 	if( *pHead == NULL )
-		return;
+		return 0;
 
 	while(cur->tid != tid)
 	{
 		if(cur->pNext == NULL)
-			return;	// can't find tid
+			return -1;	// can't find tid
 		else
 		{
 			pre = cur;	// save current node
@@ -220,7 +233,7 @@ void deleteNode(Queue queue, thread_t tid)
 		cur->pNext->pPrev = cur->pPrev;
 
 	free(cur);	// delete node(tid)
-	return;
+	return 0;
 }
 
 void deleteAtFirst(Queue queue)
@@ -239,6 +252,17 @@ void deleteAtFirst(Queue queue)
 	(*pHead)->pPrev = NULL;
 	free(temp);
 	return;
+}
+
+void copyNode(Thread* sour, Thread* dest)
+{
+	dest->status 	= sour->status;
+	dest->pExitCode	= sour->pExitCode;
+	dest->tid		= sour->tid;
+	dest->readyCond	= sour->readyCond;
+	dest->bRunnable	= sour->bRunnable;
+	dest->readyMutex= sour->readyMutex;
+	dest->parentTid	= sour->parentTid;
 }
 
 Thread* searchQueue(Queue queue, thread_t tid)

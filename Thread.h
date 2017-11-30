@@ -70,6 +70,7 @@ Thread* createNode(thread_t tid);
 Thread**	selectQueue(Queue queue);
 void	insertAtTail(Queue queue, thread_t tid);
 void	deleteAtFirst(Queue queue);
+int deleteNode(Queue queue, thread_t tid);
 Thread* searchQueue(Queue queue, thread_t tid);
 void	print(Queue queue);
 

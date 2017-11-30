@@ -70,16 +70,19 @@ int main(void)
 	//insertAtTail(READY_QUEUE, tid);
 	//insertAtTail(READY_QUEUE, tid);
 	print(READY_QUEUE);
-	printf("a: %u\n", a);
-	deleteNode(READY_QUEUE, a);
-	print(READY_QUEUE);
-	printf("c: %u\n", c);
-	deleteNode(READY_QUEUE, c);
-	print(READY_QUEUE);
-	printf("b: %u\n", b);
-	deleteNode(READY_QUEUE, b);
-	print(READY_QUEUE);
 
+	thread_suspend(a);
+	thread_suspend(b);
+	thread_suspend(c);
+	print(READY_QUEUE);
+	print(WAITING_QUEUE);
+	thread_resume(a);
+	thread_resume(b);
+	thread_resume(c);
+	print(READY_QUEUE);
+	print(WAITING_QUEUE);
+	printf("%d \n",thread_resume(c));
+	
 	
 	// insertAtTail(READY_QUEUE, tid);
 	// insertAtTail(READY_QUEUE, tid);
