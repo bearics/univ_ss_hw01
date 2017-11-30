@@ -7,16 +7,35 @@
 #include <pthread.h>
 #include <errno.h>
 
-
-
+void __thread_wait_handler(int signo)
+{
+	Thread* pTh;
+	pTh = __getThread(pthread_self());
+	pthread_mutex_lock(&(pTh->readyMutex));
+	printf("bye Im sleep\n");
+	while (pTh->bRunnable == FALSE) {}
+	pthread_cond_wait(&(pTh->readyCond), &(pTh->readyMutex));
+	pthread_mutex_unlock(&(pTh->readyMutex));
+}
 
 int 	thread_create(thread_t *thread, thread_attr_t *attr, void *(*start_routine) (void *), void *arg)
 {
+	// sigset_t set;
+	// int retSig;
+
+	// sigemptyset(&set);
+	// sigaddset(&set, SIGUSR1);
+	// signal(SIGUSR1, __thread_wait_handler);
+	
+
 	pthread_create(&thread, attr, start_routine, arg);
-	printf("add thread : %d\n", thread);
-	insertAtTail(READY_QUEUE, thread);	// insert ready 
-	sleep(5);
-	printf("send signal to thread(%d) SIGUSR1\n", thread);
+	insertAtTail(READY_QUEUE, thread);	// insert readyQ
+	// sleep(1);
+	// while(pthread_kill(thread,SIGUSR1) == ESRCH) {
+	// 	printf("tyring...\n");
+	// }
+	
+/*
 	int status = pthread_kill(thread,SIGUSR1);	// wake child function
     if ( status == ESRCH ) {
             printf("Thread ID[%d] not exist..\n", thread);
@@ -26,6 +45,13 @@ int 	thread_create(thread_t *thread, thread_attr_t *attr, void *(*start_routine)
     }  else {
             printf("Thread ID[%d] is yet alive\n", thread);
     }
+*/
+
+	printf("add thread : %d\n", thread);
+
+	printf("send signal to thread(%d) SIGUSR1\n", thread);
+
+	
 }
 
 
@@ -84,6 +110,7 @@ Thread* createNode(pthread_t tid)
 	/* initialize Thread struct */
 	newNode->status = THREAD_STATUS_READY;
 	newNode->tid = tid;
+	newNode->parentTid = pthread_self();
 	pthread_cond_init(&(newNode->readyCond), NULL);
 	newNode->bRunnable = 0;
 	pthread_mutex_init(&(newNode->readyMutex), NULL);
@@ -140,7 +167,10 @@ Thread* searchQueue(Queue queue, pthread_t tid)
 			break;
 		temp=temp->pNext;
 	}
-	return temp;
+	if(temp == NULL)
+		return (Thread*)(-1);
+	else
+		return temp;
 }
 
 void print(Queue queue)

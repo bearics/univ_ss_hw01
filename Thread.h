@@ -32,6 +32,7 @@ typedef struct _Thread {
 	pthread_cond_t     		readyCond;
 	BOOL				bRunnable;
 	pthread_mutex_t   		readyMutex;
+	pthread_t			parentTid;
 	Thread*				pPrev;
 	Thread*				pNext;
 } Thread;	

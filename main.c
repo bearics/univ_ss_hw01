@@ -14,16 +14,7 @@
 // } WrapperArg;
 
 
-void __thread_wait_handler(int signo)
-{
-	Thread* pTh;
-	pTh = __getThread(pthread_self());
-	pthread_mutex_lock(&(pTh->readyMutex));
-	printf("bye Im sleep\n");
-	while (pTh->bRunnable == FALSE) {}
-	pthread_cond_wait(&(pTh->readyCond), &(pTh->readyMutex));
-	pthread_mutex_unlock(&(pTh->readyMutex));
-}
+
 
 void *child(void *arg) {
 	printf("child\n");
@@ -36,26 +27,25 @@ void *__wrapperFunc(void* arg)
 	void* ret;
 	WrapperArg* pArg = (WrapperArg*)arg;
 	sigset_t set;
+	Thread pTh;
 	int retSig;
 	// child sleeps until TCB is initialized
-	printf("self :%d\n",pthread_self());
+	printf("self :%u\n",pthread_self());
 	sigemptyset(&set);
 	sigaddset(&set, SIGUSR1);
-	signal(SIGUSR1, __thread_wait_handler);
-	sigwait(&set, &retSig);
+	//sleep(1);
+	//sigwait(&set, &retSig);
 	printf("11%d\n", retSig);
-	// // child is ready to run
+	while(__getThread(pthread_self()) == (Thread *)(-1)) {
+		printf("not yet!\n");
+	}
+	// child is ready to run
 	__thread_wait_handler(0);
 	printf("dddd");
+
+	// Run child function 
 	ret = (*pArg->funcPtr)(pArg->funcArg);
-
-	return ret;	// Run child function 
-}
-
-void *aaa(void)
-{
-	while(1)
-		printf("ddddd");
+	return ret;
 }
 
 int main(void)
