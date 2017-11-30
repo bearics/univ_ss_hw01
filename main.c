@@ -26,20 +26,12 @@ void *__wrapperFunc(void* arg)
 
 	void* ret;
 	WrapperArg* pArg = (WrapperArg*)arg;
-	sigset_t set;
-	Thread pTh;
-	int retSig;
-	// child sleeps until TCB is initialized
-	printf("self :%u\n",pthread_self());
-	sigemptyset(&set);
-	sigaddset(&set, SIGUSR1);
-	//sleep(1);
-	//sigwait(&set, &retSig);
-	printf("11%d\n", retSig);
+	
+	// child waiting until TCB is initialized
 	while(__getThread(pthread_self()) == (Thread *)(-1)) {
 		printf("not yet!\n");
 	}
-	// child is ready to run
+	// child is ready to run & sleep
 	__thread_wait_handler(0);
 	printf("dddd");
 

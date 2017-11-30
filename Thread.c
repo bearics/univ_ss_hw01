@@ -20,20 +20,10 @@ void __thread_wait_handler(int signo)
 
 int 	thread_create(thread_t *thread, thread_attr_t *attr, void *(*start_routine) (void *), void *arg)
 {
-	// sigset_t set;
-	// int retSig;
-
-	// sigemptyset(&set);
-	// sigaddset(&set, SIGUSR1);
-	// signal(SIGUSR1, __thread_wait_handler);
-	
 
 	pthread_create(&thread, attr, start_routine, arg);
 	insertAtTail(READY_QUEUE, thread);	// insert readyQ
-	// sleep(1);
-	// while(pthread_kill(thread,SIGUSR1) == ESRCH) {
-	// 	printf("tyring...\n");
-	// }
+	
 	
 /*
 	int status = pthread_kill(thread,SIGUSR1);	// wake child function
