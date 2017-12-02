@@ -63,6 +63,9 @@ thread_t 	thread_self();
 Thread* __getThread();
 
 /* doubly linked list functions */
+
+Thread* runTh;
+
 void* foo1(void* arg);
 void* foo2(void* arg);
 

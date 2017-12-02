@@ -7,19 +7,28 @@
 #include <pthread.h>
 #include <errno.h>
 
+void __thread_wait_handler(int signo);
+
 void *__wrapperFunc(void* arg)
 {
 
 	void* ret;
 	WrapperArg* pArg = (WrapperArg*)arg;
-	printf("self : %u\n", pthread_self());
+	//printf("self : %u\n", pthread_self());
+	
+	int retSig;
+	sigset_t set;
+	sigemptyset(&set);
+	sigaddset(&set, SIGUSR1);
+	signal(SIGUSR1, __thread_wait_handler);
+	
 	// child waiting until TCB is initialized
 	while(__getThread(pthread_self()) == NULL) {
 	//	printf("not yet!\n");
 	}
 	// child is ready to run & sleep
 	__thread_wait_handler(0);
-
+	//printf("i'm wakeup at %u\n", pthread_self());
 	// Run child function 
 	ret = (*(pArg->funcPtr))(pArg->funcArg);
 	free(arg);
@@ -29,7 +38,7 @@ void *__wrapperFunc(void* arg)
 
 void __thread_wakeup(Thread* pTh)
 {
-	printf("wake up tid : %u \n", pTh->tid);
+	//printf("wake up tid : %u \n", pTh->tid);
 	pthread_mutex_lock(&(pTh->readyMutex));
 	pTh->bRunnable = TRUE;
 	pthread_cond_signal(&(pTh->readyCond));
@@ -41,16 +50,18 @@ void __thread_wait_handler(int signo)
 	Thread* pTh;
 	pTh = __getThread(pthread_self());
 	pthread_mutex_lock(&(pTh->readyMutex));
+	//printf("dd?? %d, %u\n",pTh->bRunnable, pthread_self());
 	while (pTh->bRunnable == FALSE){
-		printf("bye Im sleep tid : %u \n", pTh->tid);
+		//printf("bye Im sleep tid : %u \n", pTh->tid);
 		pthread_cond_wait(&(pTh->readyCond), &(pTh->readyMutex));
 	}
+	//printf("fin wait\n");
 	pthread_mutex_unlock(&(pTh->readyMutex));
 }
 
 int 	thread_create(thread_t *thread, thread_attr_t *attr, void* (*start_routine) (void *), void *arg)
 {
-	printf("child1 : %d\n", start_routine);
+	//printf("child1 : %d\n", start_routine);
 
 	WrapperArg* wrapperArg=(WrapperArg*)malloc(sizeof(WrapperArg));
 	wrapperArg->funcPtr = start_routine;
@@ -76,8 +87,26 @@ int 	thread_create(thread_t *thread, thread_attr_t *attr, void* (*start_routine)
 
 int 	thread_join(thread_t tid, void **retval)
 {
-	Thread* pTh = __getThread(tid);
-	pTh->status = THREAD_STATUS_READY;
+	// Thread* pTR = searchQueue(READY_QUEUE, tid);
+	// Thread* pTW = NULL;
+	// pTh->status = THREAD_STATUS_READY;
+	// insertAtTail(WAITING_QUEUE, tid);
+	// pTW = searchQueue(WAITING_QUEUE, tid);
+	// copyNode(pTR, pTW);
+	// deleteAtFirst(READY_QUEUE);
+
+	// sleep
+	__thread_wait_handler(0);
+
+	//wake up
+
+
+}
+
+int 	thread_exit(void **retval)
+{
+	//Thread* pTh = __getThread(tid);
+	//	pTh->status = THREAD_STATUS_READY;
 
 }
 
@@ -240,13 +269,9 @@ void deleteAtFirst(Queue queue)
 
 void copyNode(Thread* sour, Thread* dest)
 {
-	dest->status 	= sour->status;
-	dest->pExitCode	= sour->pExitCode;
-	dest->tid		= sour->tid;
-	dest->readyCond	= sour->readyCond;
-	dest->bRunnable	= sour->bRunnable;
-	dest->readyMutex= sour->readyMutex;
-	dest->parentTid	= sour->parentTid;
+	memcpy(dest, sour, sizeof(Thread));
+	dest->pNext=NULL;
+	dest->pPrev=NULL;
 }
 
 Thread* searchQueue(Queue queue, thread_t tid)
