@@ -4,12 +4,11 @@
 #include <string.h>
 #include <signal.h>
 
-
-
 int		RunScheduler( void )
 {
 	while(1)
 	{
+		pthread_mutex_lock(&mainMutex);
 		if(ReadyQHead != NULL)
 		{
 			if( ReadyQHead->status != THREAD_STATUS_RUN )	// no running thread
@@ -27,6 +26,7 @@ int		RunScheduler( void )
 				ReadyQTail->status = THREAD_STATUS_READY;
 				ReadyQTail->bRunnable = FALSE;
 				deleteAtFirst(READY_QUEUE);
+				// ready to run first node
 				ReadyQHead->status = THREAD_STATUS_RUN;
 				// run first node and stop last node(running thread)
 				__ContextSwitch(*ReadyQTail, ReadyQHead);
@@ -35,6 +35,18 @@ int		RunScheduler( void )
 			
 		}
 		sleep(TIMESLICE);
+		printf("rr..\n");
+		while(runStop != 0)
+		{
+			// stop running temporarily
+			pthread_kill(ReadyQHead, SIGUSR1);
+		 	pthread_cond_wait(&mainCond, &mainMutex);
+		 	__thread_wakeup(ReadyQHead);
+		 	printf("wakeup Scheduler!\n");
+		}
+		pthread_mutex_unlock(&mainMutex);
+
+		printf("ss..\n");
 	}
 	print(READY_QUEUE);
 	free(runTh);

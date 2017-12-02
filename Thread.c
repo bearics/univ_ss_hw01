@@ -6,6 +6,8 @@
 #include <signal.h>
 #include <pthread.h>
 #include <errno.h>
+void runScheduler_resume();
+
 
 void __thread_wait_handler(int signo);
 
@@ -38,7 +40,7 @@ void *__wrapperFunc(void* arg)
 
 void __thread_wakeup(Thread* pTh)
 {
-	//printf("wake up tid : %u \n", pTh->tid);
+	printf("wake up tid : %u \n", pTh->tid);
 	pthread_mutex_lock(&(pTh->readyMutex));
 	pTh->bRunnable = TRUE;
 	pthread_cond_signal(&(pTh->readyCond));
@@ -87,15 +89,17 @@ int 	thread_create(thread_t *thread, thread_attr_t *attr, void* (*start_routine)
 
 int 	thread_join(thread_t tid, void **retval)
 {
-	// Thread* pTR = searchQueue(READY_QUEUE, tid);
-	// Thread* pTW = NULL;
-	// pTh->status = THREAD_STATUS_READY;
+	Thread* pTR = searchQueue(READY_QUEUE, tid);
+	Thread* pTW = NULL;
+	
+	//pTh->status = THREAD_STATUS_READY;
 	// insertAtTail(WAITING_QUEUE, tid);
 	// pTW = searchQueue(WAITING_QUEUE, tid);
 	// copyNode(pTR, pTW);
 	// deleteAtFirst(READY_QUEUE);
 
 	// sleep
+	pTR->bRunnable = FALSE;
 	__thread_wait_handler(0);
 
 	//wake up
@@ -113,38 +117,67 @@ int 	thread_exit(void **retval)
 
 int 	thread_suspend(thread_t tid)
 {
+	printf("%p, %p\n", &mainMutex, &mainCond);
+	if(searchQueue(READY_QUEUE, tid) == NULL)
+		return -1; // no tid
+
+	runStop = 1;
+	pthread_mutex_lock(&mainMutex);
+
+	if(__getThread(tid)->bRunnable == TRUE){
+		runScheduler_resume();
+		return -1;	// running thread cannot suspend
+	}
+	
 	insertAtTail(WAITING_QUEUE, tid);
 	
 	Thread* readyNode = searchQueue(READY_QUEUE, tid);	// find TCB in waiting queue
 	Thread* waitNode = searchQueue(WAITING_QUEUE, tid);	// find TCB in waiting queue
 
-	if(readyNode == NULL || waitNode == NULL )
+	if(readyNode == NULL || waitNode == NULL ){
+		runScheduler_resume();
 		return -1; // fail to find tid in Q
+	}
 
 	copyNode(readyNode,waitNode); // copy Node
 	waitNode->status = THREAD_STATUS_BLOCKED;
 	
-	if(deleteNode(READY_QUEUE, tid) < 0 )
+	if(deleteNode(READY_QUEUE, tid) < 0 ){
+		runScheduler_resume();
 		return -1;	// fail to delete node
+	}
+
+	runScheduler_resume();
 	return 0;	// success!
+
 }
 
 
 int	thread_resume(thread_t tid)
 {
+	if(searchQueue(WAITING_QUEUE, tid) == NULL)
+		return -1; // no tid
 	insertAtTail(READY_QUEUE, tid);
-
+	runStop = 1;
+	pthread_mutex_lock(&mainMutex);
 	Thread* readyNode = searchQueue(READY_QUEUE, tid);	// find TCB in waiting queue
 	Thread* waitNode = searchQueue(WAITING_QUEUE, tid);	// find TCB in waiting queue
 
 	if(readyNode == NULL || waitNode == NULL )
+	{
+		runScheduler_resume();
 		return -1; // fail to find tid in Q
+	}
 
 	copyNode(waitNode, readyNode); // copy Node
 	readyNode->status = THREAD_STATUS_BLOCKED;
 
 	if(deleteNode(WAITING_QUEUE, tid) < 0 )
+	{
+		runScheduler_resume();
 		return -1;	// fail to delete node
+	}
+	runScheduler_resume();
 	return 0;	// success!
 }
 
@@ -269,9 +302,12 @@ void deleteAtFirst(Queue queue)
 
 void copyNode(Thread* sour, Thread* dest)
 {
+	Thread* next = dest->pNext;
+	Thread* prev = dest->pPrev;
 	memcpy(dest, sour, sizeof(Thread));
-	dest->pNext=NULL;
-	dest->pPrev=NULL;
+	dest->pNext = next;
+	dest->pPrev = prev;
+
 }
 
 Thread* searchQueue(Queue queue, thread_t tid)
@@ -285,6 +321,20 @@ Thread* searchQueue(Queue queue, thread_t tid)
 		temp=temp->pNext;
 	}
 	return temp;
+}
+
+void runScheduler_resume()
+{
+
+	pthread_cond_signal(&mainCond);
+	pthread_mutex_unlock(&mainMutex);
+	runStop = 0;
+	return;
+}
+
+void runScheduler_stop()
+{
+
 }
 
 void print(Queue queue)

@@ -2,8 +2,6 @@
 #define __THREAD_H__
 
 #include <pthread.h>
-
-
 #define FALSE 0
 #define TRUE 1
 
@@ -65,6 +63,10 @@ Thread* __getThread();
 /* doubly linked list functions */
 
 Thread* runTh;
+
+pthread_mutex_t mainMutex;
+pthread_cond_t mainCond;
+int runStop;
 
 void* foo1(void* arg);
 void* foo2(void* arg);
