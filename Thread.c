@@ -13,7 +13,6 @@ void *__wrapperFunc(void* arg)
 	void* ret;
 	WrapperArg* pArg = (WrapperArg*)arg;
 	printf("self : %u\n", pthread_self());
-	
 	// child waiting until TCB is initialized
 	while(__getThread(pthread_self()) == NULL) {
 	//	printf("not yet!\n");
@@ -22,12 +21,15 @@ void *__wrapperFunc(void* arg)
 	__thread_wait_handler(0);
 
 	// Run child function 
-	ret = (*pArg->funcPtr)(pArg->funcArg);
+	ret = (*(pArg->funcPtr))(pArg->funcArg);
+	free(arg);
+	printf("byebye\n");
 	return ret;
 }
 
 void __thread_wakeup(Thread* pTh)
 {
+	printf("wake up tid : %u \n", pTh->tid);
 	pthread_mutex_lock(&(pTh->readyMutex));
 	pTh->bRunnable = TRUE;
 	pthread_cond_signal(&(pTh->readyCond));
@@ -38,24 +40,26 @@ void __thread_wait_handler(int signo)
 {
 	Thread* pTh;
 	pTh = __getThread(pthread_self());
-	// printf("bye Im sleep tid : %u \n", pthread_self());
 	pthread_mutex_lock(&(pTh->readyMutex));
-	while (pTh->bRunnable == FALSE)
+	while (pTh->bRunnable == FALSE){
+		printf("bye Im sleep tid : %u \n", pTh->tid);
 		pthread_cond_wait(&(pTh->readyCond), &(pTh->readyMutex));
+	}
 	pthread_mutex_unlock(&(pTh->readyMutex));
 }
 
-int 	thread_create(thread_t *thread, thread_attr_t *attr, void *(*start_routine) (void *), void *arg)
+int 	thread_create(thread_t *thread, thread_attr_t *attr, void* (*start_routine) (void *), void *arg)
 {
+	printf("child1 : %d\n", start_routine);
 
-	WrapperArg wrapperArg;
-	wrapperArg.funcPtr = start_routine;
-	wrapperArg.funcArg = arg;
+	WrapperArg* wrapperArg=(WrapperArg*)malloc(sizeof(WrapperArg));
+	wrapperArg->funcPtr = start_routine;
+	wrapperArg->funcArg = arg;
 
-	pthread_create(thread, attr, __wrapperFunc,&wrapperArg);
+	pthread_create(thread, attr, __wrapperFunc,wrapperArg);
 	insertAtTail(READY_QUEUE, *thread);	// insert readyQ
-	printf("hi : %u \n", *thread);
-	
+	//sleep(2);
+		
 /*
 	int status = pthread_kill(thread,SIGUSR1);	// wake child function
     if ( status == ESRCH ) {
@@ -66,13 +70,7 @@ int 	thread_create(thread_t *thread, thread_attr_t *attr, void *(*start_routine)
     }  else {
             printf("Thread ID[%d] is yet alive\n", thread);
     }
-*/
-
-	printf("add thread : %u\n", thread);
-
-	printf("send signal to thread(%u) SIGUSR1\n", thread);
-
-	
+*/	
 }
 
 
@@ -187,20 +185,6 @@ void	insertAtTail(Queue queue, thread_t tid)
 	return;
 }
 
-Thread* popAtFirst(Queue queue)
-{
-	Thread** pHead = selectQHead(queue);
-	Thread* temp = *pHead;
-
-	if(*pHead == NULL)
-		return NULL;	// nothing in queue
-	temp = temp->pNext;
-	*pHead = temp;
-	if(*pHead != NULL)	// one or mores node in queue
-		(*pHead)->pPrev = NULL;	// set 1's node's pPrev
-	return temp;	// return 1's node
-}
-
 int deleteNode(Queue queue, thread_t tid)
 {
 	Thread** pHead = selectQHead(queue);
@@ -289,7 +273,8 @@ void print(Queue queue)
 	while(temp != NULL)
 	{
 		printf("\nnode%2d(%p) ------------------------------------------------\n",i, temp);
-		printf(" *  Prev : %p,  \tNext : %p,     \ttid: %u\n *  status : %d,  \tbRunnable : %d\n",  temp->pPrev, temp->pNext, temp->tid, temp->status, temp->bRunnable);
+		printf(" *  Prev : %p,  \tNext : %p,     \ttid: %u\n",  temp->pPrev, temp->pNext, temp->tid);
+		printf(" *  status : %d,  \tbRunnable : %d\n", temp->status, temp->bRunnable);
 		temp = temp->pNext;
 		i++;
 	}

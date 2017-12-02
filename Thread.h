@@ -20,9 +20,9 @@ typedef void thread_attr_t;
 
 
 typedef enum{
-	THREAD_STATUS_RUN = 0,
-	THREAD_STATUS_READY = 1,
-	THREAD_STATUS_BLOCKED = 2,
+	THREAD_STATUS_RUN = 0,		// running
+	THREAD_STATUS_READY = 1,	// ready in ready Q
+	THREAD_STATUS_BLOCKED = 2,	// waiting in waiting Q
 	THREAD_STATUS_ZOMBIE = 3
 }ThreadStatus;
 
