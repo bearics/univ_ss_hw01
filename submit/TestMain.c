@@ -8,12 +8,60 @@
 #include "Init.h"
 #include "Scheduler.h"
 #include "Thread.h"
+#include "Run.h"
 
 
 // #include "Task.h"
 // #include "init.h"
 // #include "ObjMgr.h"
 // #include "Scheduler.h"
+
+void hyounglin()
+{
+	pthread_t tid1, tid2, tid3;
+	print(READY_QUEUE);
+	print(WAITING_QUEUE);
+	insertAtTail(READY_QUEUE, createNode((pthread_t)0));
+
+	print(READY_QUEUE);
+	print(WAITING_QUEUE);
+	insertAtTail(READY_QUEUE, createNode((pthread_t)1));
+
+	print(READY_QUEUE);
+	print(WAITING_QUEUE);
+	insertAtTail(READY_QUEUE, createNode((pthread_t)2));
+
+	print(READY_QUEUE);
+	print(WAITING_QUEUE);
+
+
+	insertAtTail(WAITING_QUEUE ,deleteAtFirst(READY_QUEUE));
+	print(READY_QUEUE);
+	print(WAITING_QUEUE);
+
+	insertAtTail(WAITING_QUEUE ,deleteAtFirst(READY_QUEUE));
+	print(READY_QUEUE);
+	print(WAITING_QUEUE);
+
+	insertAtTail(WAITING_QUEUE ,deleteAtFirst(READY_QUEUE));
+	print(READY_QUEUE);
+	print(WAITING_QUEUE);
+
+	insertAtTail(READY_QUEUE ,deleteAtFirst(WAITING_QUEUE));
+	print(READY_QUEUE);
+	print(WAITING_QUEUE);
+
+	insertAtTail(READY_QUEUE ,deleteAtFirst(WAITING_QUEUE));
+	print(READY_QUEUE);
+	print(WAITING_QUEUE);
+
+	insertAtTail(READY_QUEUE ,deleteAtFirst(WAITING_QUEUE));
+	print(READY_QUEUE);
+	print(WAITING_QUEUE);
+
+	return;
+}
+
 
 void main(int argc, char* argv[])
 {
@@ -41,6 +89,9 @@ void main(int argc, char* argv[])
 		case 3:
 			thread_create(&tid3, NULL, (void*)TestCase3, 0);
 		   	break;
+		case 4:
+			hyounglin();
+			break;
 
 	}
 

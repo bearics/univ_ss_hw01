@@ -1,7 +1,7 @@
 #include "Thread.h"
 #include "Init.h"
 #include "Scheduler.h"
-
+#include "Run.h"
 
 int 	thread_create(thread_t *thread, thread_attr_t *attr, void *(*start_routine) (void *), void *arg)
 {
@@ -25,13 +25,6 @@ int	thread_resume(thread_t tid)
 {
 
 }
-
-
-int 		thread_cancel(thread_t tid)
-{
-
-}
-
 
 int thread_exit(void* retval)
 {

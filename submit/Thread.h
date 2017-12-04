@@ -22,12 +22,12 @@ typedef enum{
 
 typedef struct _Thread Thread;
 typedef struct _Thread {
-	ThreadStatus			status;
+	ThreadStatus		status;
 	void* 				pExitCode;
-    	pthread_t			tid;
-    	pthread_cond_t     		readyCond;
+    pthread_t			tid;
+    pthread_cond_t     	readyCond;
    	BOOL				bRunnable;
-   	pthread_mutex_t   		readyMutex;
+   	pthread_mutex_t   	readyMutex;
 	pthread_t			parentTid;
 	Thread*				pPrev;
 	Thread*				pNext;
@@ -45,7 +45,7 @@ Thread*		ReadyQTail;
 
 /* head and tail pointers for waiting queue */
 Thread*		WaitQHead;
-Thread*		WaitQTai;
+Thread*		WaitQTail;
 
 
 int 		thread_create(thread_t *thread, thread_attr_t *attr, void *(*start_routine) (void *), void *arg);
