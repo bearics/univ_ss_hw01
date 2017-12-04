@@ -85,9 +85,6 @@ void	insertAtTail(Queue queue, Thread* pth)
 	Thread** pHead = selectQHead(queue);
 	Thread** pTail = selectQTail(queue);
 
-	pth->pNext = NULL;
-	pth->pPrev = NULL;
-
 	if(*pHead == NULL)
 	{
 		*pHead = pth;
@@ -106,26 +103,60 @@ Thread*	deleteAtFirst(Queue queue)
 {
 	Thread** pHead = selectQHead(queue);
 	Thread** pTail = selectQTail(queue);
-	Thread* temp = *pHead;
+	Thread* del = *pHead;
 
 	if(*pHead == NULL)
 		return NULL;	// nothing to delete
-	if(temp->pNext == NULL)
+	if(del->pNext == NULL)
 	{
 		*pHead = NULL;
 		*pTail = NULL;
 	}
 	else
 	{
-		*pHead = temp->pNext;
+		*pHead = del->pNext;
 		(*pHead)->pPrev = NULL;
 	}
-	return temp;
+
+	del->pNext = NULL;
+	del->pPrev = NULL;
+	return del;
 }
 
 Thread* deleteNode(Queue queue, thread_t tid)
 {
+	Thread** pHead = selectQHead(queue);
+	Thread** pTail = selectQTail(queue);
+	Thread* del = *pHead;
+	Thread* pre = NULL;
 
+	if( *pHead == NULL )
+		return 0;
+
+	while(del->tid != tid)
+	{
+		if(del->pNext == NULL)
+			return NULL;	// can't find tid
+		else
+		{
+			pre = del;	// save current node
+			del = del->pNext;
+		}
+	}
+
+	if(del == *pHead)
+		*pHead = (*pHead)->pNext;
+	else
+		del->pPrev->pNext = del->pNext;
+
+	if(del == *pTail)
+		*pTail = del->pPrev;
+	else
+		del->pNext->pPrev = del->pPrev;
+
+	del->pNext = NULL;
+	del->pPrev = NULL;
+	return del;
 }
 
 Thread* searchQueue(Queue queue, thread_t tid)

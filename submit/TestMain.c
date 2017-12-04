@@ -35,29 +35,11 @@ void hyounglin()
 	print(WAITING_QUEUE);
 
 
-	insertAtTail(WAITING_QUEUE ,deleteAtFirst(READY_QUEUE));
+	insertAtTail(WAITING_QUEUE ,deleteNode(READY_QUEUE, (pthread_t)1));
 	print(READY_QUEUE);
 	print(WAITING_QUEUE);
 
-	insertAtTail(WAITING_QUEUE ,deleteAtFirst(READY_QUEUE));
-	print(READY_QUEUE);
-	print(WAITING_QUEUE);
 
-	insertAtTail(WAITING_QUEUE ,deleteAtFirst(READY_QUEUE));
-	print(READY_QUEUE);
-	print(WAITING_QUEUE);
-
-	insertAtTail(READY_QUEUE ,deleteAtFirst(WAITING_QUEUE));
-	print(READY_QUEUE);
-	print(WAITING_QUEUE);
-
-	insertAtTail(READY_QUEUE ,deleteAtFirst(WAITING_QUEUE));
-	print(READY_QUEUE);
-	print(WAITING_QUEUE);
-
-	insertAtTail(READY_QUEUE ,deleteAtFirst(WAITING_QUEUE));
-	print(READY_QUEUE);
-	print(WAITING_QUEUE);
 
 	return;
 }
