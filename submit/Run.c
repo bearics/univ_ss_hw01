@@ -217,6 +217,8 @@ void print(Queue queue)
 		printf(" *  status : %d,  \tbRunnable : %d   ptid : %u\n", temp->status, temp->bRunnable, (unsigned int)(temp->parentTid));
 		temp = temp->pNext;
 		i++;
+		if(i>10)
+			break;
 	}
 	printf("\n");
 }

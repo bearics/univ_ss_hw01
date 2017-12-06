@@ -33,15 +33,16 @@ int 	thread_join(thread_t thread, void **retval)
 
 	if( runTh != NULL )
 		pth = runTh;
-	else 
+	else {
 		pth = searchQueue(READY_QUEUE, pthread_self());
+		deleteNode(READY_QUEUE, pthread_self());
+	}
 	
 	if(pth == NULL)
 	{
 		printQ();
 		sleep(100);
 	}
-	printf("1\n");
 	cth = searchQueue(WAITING_QUEUE, thread);
 	if(cth != NULL)
 	{
@@ -81,11 +82,11 @@ int 	thread_join(thread_t thread, void **retval)
 
 	// put parent thread to readyQ
 	pth->status = THREAD_STATUS_READY;
-	printQ();
+	//printQ();
 	insertAtTail(READY_QUEUE, deleteNode(WAITING_QUEUE, pth->tid));
 	
 	printf("go ready Q gogogogogogogogogogog\n");
-	printQ();
+	//printQ();
 	printf("fin to fish\n");
 	runResume();
 	return 0;	// success
@@ -147,14 +148,11 @@ int thread_exit(void* retval)
 
 	//printQ();
 	//printf("exi: tid=%u\n", pthread_self());
-	printQ();
-	printf("cth : %u\n", cth->tid);
-	printQ();
+
 	cth->pExitCode = retval;
 	cth->status = THREAD_STATUS_ZOMBIE;
 	insertAtTail(WAITING_QUEUE, cth);
 	runTh = NULL;
-	printQ();
 	printf("where is fisher?\n");	
 	if((pth = searchQueue(WAITING_QUEUE, cth->parentTid)) != NULL){
 		__thread_wakeup(pth);
