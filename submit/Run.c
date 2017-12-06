@@ -38,19 +38,10 @@ void __thread_wait_handler(int signo)
 			pTh = runTh;
 		}
 	}
-	if(pTh == NULL){
-		//printf("%u\n",pthread_self());
-		//printQ();
-		//printf("wait!!=null\n");	
-	}
-	else
-		// printf("wait!!=%u\n", pTh->tid);
 	pTh->bRunnable = FALSE;
 	pthread_mutex_lock(&(pTh->readyMutex));
-	// printf("hello tid=%u\n", pTh->tid);
 	waitCreate=1;
 	while (pTh->bRunnable == FALSE){
-		// printf("im sleep tid=%u\n", pTh->tid);
 		pthread_cond_wait(&(pTh->readyCond), &(pTh->readyMutex));
 	}
 	pthread_mutex_unlock(&(pTh->readyMutex));
@@ -233,8 +224,9 @@ void runResume()
 }
 void printQ()
 {
+	printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^READY_QUEUE^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
 	print(READY_QUEUE);
-	printf("0000000000000000000000000000000000000000000000000\n");
+	printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^WAITING_QUEUE^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
 	print(WAITING_QUEUE);
 	printRunningTh();	
 }

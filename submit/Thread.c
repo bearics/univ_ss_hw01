@@ -28,7 +28,6 @@ int 	thread_join(thread_t thread, void **retval)
 	Thread* pth = NULL;
 	Thread* cth = NULL;
 	runStop++;
-	printf("join: self(%u), target(%u)\n", pthread_self(), thread);
 	pthread_mutex_lock(&mainMutex);
 
 	if( runTh != NULL )
@@ -37,12 +36,7 @@ int 	thread_join(thread_t thread, void **retval)
 		pth = searchQueue(READY_QUEUE, pthread_self());
 		deleteNode(READY_QUEUE, pthread_self());
 	}
-	
-	if(pth == NULL)
-	{
-		printQ();
-		sleep(100);
-	}
+
 	cth = searchQueue(WAITING_QUEUE, thread);
 	if(cth != NULL)
 	{
@@ -54,7 +48,6 @@ int 	thread_join(thread_t thread, void **retval)
 			return 0;	// success
 		}
 	}
-	printf("2\n");
 	// there is no zombie(thread)
 
 	pth->status = THREAD_STATUS_BLOCKED;
@@ -63,11 +56,9 @@ int 	thread_join(thread_t thread, void **retval)
 	do
 	{
 		runResume();
-		printf("fishing zombie\n");
 		__thread_wait_handler(0);
 		runStop++;
 		pthread_mutex_lock(&mainMutex);
-		//printf("finding...\n");
 		cth = searchQueue(WAITING_QUEUE, thread);
 		if( cth != NULL)
 			if(cth->status == THREAD_STATUS_ZOMBIE)
@@ -75,19 +66,11 @@ int 	thread_join(thread_t thread, void **retval)
 			else
 				cth = NULL;
 	} while (cth == NULL);
-	printf("get!! zombie\n");
 	// now cth is zombie's node pointer
 	*retval = cth->pExitCode;
 	free(deleteNode(WAITING_QUEUE, thread)); // delete zombie
-
-	// put parent thread to readyQ
 	pth->status = THREAD_STATUS_READY;
-	//printQ();
 	insertAtTail(READY_QUEUE, deleteNode(WAITING_QUEUE, pth->tid));
-	
-	printf("go ready Q gogogogogogogogogogog\n");
-	//printQ();
-	printf("fin to fish\n");
 	runResume();
 	return 0;	// success
 }
@@ -133,7 +116,6 @@ int	thread_resume(thread_t tid)
 
 int thread_exit(void* retval)
 {
-	//printf("exit exe!\n");
 	Thread* pth=NULL;
 	Thread* cth=NULL;
 	runStop++;
@@ -141,25 +123,14 @@ int thread_exit(void* retval)
 
 	cth = runTh;
 
-	if(runTh == NULL){
-		printf("exit: self(%u)\n", pthread_self());
-		//printQ();
-	}
-
-	//printQ();
-	//printf("exi: tid=%u\n", pthread_self());
-
 	cth->pExitCode = retval;
 	cth->status = THREAD_STATUS_ZOMBIE;
 	insertAtTail(WAITING_QUEUE, cth);
 	runTh = NULL;
-	printf("where is fisher?\n");	
 	if((pth = searchQueue(WAITING_QUEUE, cth->parentTid)) != NULL){
 		__thread_wakeup(pth);
-		printf("fisher wakeup!!\n");	
 	}
 	runResume();
-	//printf("fin exit\n");
 	return 0;
 }
 
