@@ -13,7 +13,7 @@ int		RunScheduler( void )
 	{
 		pthread_mutex_lock(&mainMutex);
 		if(runStop != 0){
-			printf("wait!!\n");
+			//printf("wait!!\n");
 			pthread_cond_wait(&mainCond, &mainMutex);
 		}
 		__ContextSwitch(runTh, ReadyQHead);
@@ -45,13 +45,4 @@ void    __ContextSwitch(Thread* pCurThread, Thread* pNewThread)
 	return;
 }
 
-
-/*
-	print(READY_QUEUE);
-	printf("0000000000000000000000000000000000000000000000000\n");
-	print(WAITING_QUEUE);
-	printRunningTh();
-	printf("my tid = %u\n", pthread_self());
-
-*/
 

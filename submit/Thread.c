@@ -28,11 +28,11 @@ int 	thread_join(thread_t thread, void **retval)
 	Thread* pth = NULL;
 	Thread* cth = NULL;
 	runStop++;
-	printf("join: self(%u), target(%u)\n", pthread_self(), thread);
+	//printf("join: self(%u), target(%u)\n", pthread_self(), thread);
 	pthread_mutex_lock(&mainMutex);
 
 	while(runTh == NULL){
-		printf("join(NULL): self(%u), target(%u)\n", pthread_self(), thread);
+		//printf("join(NULL): self(%u), target(%u)\n", pthread_self(), thread);
 		runResume();
 		__thread_wait_handler(0);
 		runStop++;
@@ -65,7 +65,7 @@ int 	thread_join(thread_t thread, void **retval)
 		__thread_wait_handler(0);
 		runStop++;
 		pthread_mutex_lock(&mainMutex);
-		printf("finding...\n");
+		//printf("finding...\n");
 		cth = searchQueue(WAITING_QUEUE, thread);
 		if( cth != NULL)
 			if(cth->status == THREAD_STATUS_ZOMBIE)
@@ -137,8 +137,8 @@ int thread_exit(void* retval)
 	cth = runTh;
 
 	if(runTh == NULL){
-		printf("exit: self(%u)\n", pthread_self());
-		printQ();
+		//printf("exit: self(%u)\n", pthread_self());
+		//printQ();
 	}
 
 	//printQ();
