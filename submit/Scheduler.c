@@ -13,8 +13,10 @@ int		RunScheduler( void )
 	while(1)
 	{
 		pthread_mutex_lock(&mainMutex);
+		printf("b\n");
 		if(runStop != 0){
 			printf("wait!!\n");
+			printf("c\n");
 			pthread_cond_wait(&mainCond, &mainMutex);
 		}
 		printf("g?\n");
@@ -22,7 +24,7 @@ int		RunScheduler( void )
 		pthread_mutex_unlock(&mainMutex);
 		printQ();
 		sleep(TIMESLICE);
-		printf("asdf\n");
+		printf("a\n");
 		
 	}
 }

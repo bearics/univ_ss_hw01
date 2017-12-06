@@ -29,24 +29,37 @@ int 	thread_join(thread_t thread, void **retval)
 	Thread* cth = NULL;
 	runStop++;
 	pthread_mutex_lock(&mainMutex);
-
+	printf("Im(%u) join!!! = %u\n", pthread_self(), thread);
+	printQ();
 	if(searchQueue(WAITING_QUEUE, thread) == NULL)
 	{	
+		printf("Im waiting tid = %u\n", thread);
+		printQ();
 		if(runTh == NULL)
 			return -1;
 		pth = runTh;
 		insertAtTail(WAITING_QUEUE, pth);
 		runTh = NULL;
-		runResume();
-		//printQ();
+		while(searchQueue(WAITING_QUEUE, thread) == NULL)
+		{
+			runResume();
+			__thread_wait_handler(0);
+			printf("join wake up!!\n"); 
+			pthread_mutex_lock(&mainMutex);
+		}
+
 		runStop++;
-		pthread_mutex_lock(&mainMutex);
+		
 		insertAtTail(READY_QUEUE, pth);
+		deleteNode(WAITING_QUEUE, pth->tid);
+		printf("join wake up!! (%u) tid = %u\n", pthread_self() , thread);
 	}
 	//printf("%u\n", thread);
 	cth=searchQueue(WAITING_QUEUE, thread);
 	*retval = cth->pExitCode;
-	free(deleteNode(READY_QUEUE, cth->tid));
+	printf("delete tid = %u , %u\n", cth->tid, thread);
+	free(deleteNode(WAITING_QUEUE, cth->tid));
+	printQ();
 	runResume();
 	return 0;
 }
@@ -67,19 +80,20 @@ int thread_exit(void* retval)
 {
 	//printf("exit exe!\n");
 	Thread* pth=NULL;
+	Thread* cth=NULL;
 	runStop++;
 	pthread_mutex_lock(&mainMutex);
+	cth = runTh;
 	printQ();
-	//printf("exi: tid=%u\n", pthread_self());
-	pth = runTh;
-	pth->pExitCode = retval;
-	pth->status = THREAD_STATUS_ZOMBIE;
-	insertAtTail(WAITING_QUEUE, pth);
-	
-	while((pth = searchQueue(WAITING_QUEUE, pth->tid)) == NULL){}
-	
+	printf("exi: tid=%u\n", pthread_self());
+	cth->pExitCode = retval;
+	cth->status = THREAD_STATUS_ZOMBIE;
+	insertAtTail(WAITING_QUEUE, cth);
+	while((cth = searchQueue(WAITING_QUEUE, cth->tid)) == NULL){}
 	runTh = NULL;
-	__thread_wakeup(pth);
+
+	if( (pth = searchQueue(WAITING_QUEUE, cth->parentTid)) != NULL)
+		__thread_wakeup(pth);
 
 	runResume();
 	return 0;

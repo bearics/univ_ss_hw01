@@ -165,6 +165,9 @@ Thread* deleteNode(Queue queue, thread_t tid)
 		*pTail = del->pPrev;
 	else
 		del->pNext->pPrev = del->pPrev;
+	
+	if(*pHead == NULL)
+		*pTail = NULL;
 
 	del->pNext = NULL;
 	del->pPrev = NULL;
