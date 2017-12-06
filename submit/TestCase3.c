@@ -5,10 +5,8 @@ void* Tc3ThreadProc(void* param)
 	thread_t tid = 0;
 	int *retVal; 
 	tid = thread_self();
-	/////
-	int i=0;
-	//////
-	while (i++<5)
+	
+	while (10)
 	{
 		sleep(2);
 		printf("Tc3ThreadProc: my thread id:(%d), arg : %d\n", (int)tid, *((int*)param));
@@ -60,7 +58,7 @@ TestCase3(void)
 			assert(0);
 		}
 	}
-	printQ();
+	
 	/* Resume thread sequentially */
 	for (i=0;i<TOTAL_THREAD_NUM;i++)
 	{

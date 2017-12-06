@@ -5,12 +5,14 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <signal.h>
+#include <unistd.h>
 
 
 int		RunScheduler( void )
 {
 	while(1)
 	{
+		//printQ();
 		pthread_mutex_lock(&mainMutex);
 		if(runStop != 0){
 			//printf("wait!!\n");
@@ -33,9 +35,9 @@ void    __ContextSwitch(Thread* pCurThread, Thread* pNewThread)
 
 	if(pCurThread != NULL)
 	{
-		runTh->status = THREAD_STATUS_READY;
-		pthread_kill(runTh->tid, SIGUSR1);
-		insertAtTail(READY_QUEUE, runTh);
+		pCurThread->status = THREAD_STATUS_READY;
+		pthread_kill(pCurThread->tid, SIGUSR1);
+		insertAtTail(READY_QUEUE, pCurThread);
 	}
 	runTh = deleteAtFirst(READY_QUEUE);
 	runTh->status = THREAD_STATUS_RUN;

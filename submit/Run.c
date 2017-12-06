@@ -40,7 +40,7 @@ void __thread_wait_handler(int signo)
 	}
 	if(pTh == NULL){
 		//printf("%u\n",pthread_self());
-		printQ();
+		//printQ();
 		//printf("wait!!=null\n");	
 	}
 	else
@@ -96,6 +96,9 @@ Thread*	insertAtTail(Queue queue, Thread* pth)
 {
 	Thread** pHead = selectQHead(queue);
 	Thread** pTail = selectQTail(queue);
+	
+	pth->pNext = NULL;
+	pth->pPrev = NULL;
 
 	if(*pHead == NULL)
 	{
@@ -107,6 +110,7 @@ Thread*	insertAtTail(Queue queue, Thread* pth)
 	(*pTail)->pNext = pth;
 	pth->pPrev = *pTail;
 	*pTail = pth;
+	
 	return pth;
 }
 
@@ -193,8 +197,8 @@ void printRunningTh()
 		return;
 	}
 	printf("\n----------------------------------Running Th----------------------\n");
-	printf(" *  Prev : %p,  \tNext : %p,     \ttid: %u\n",  runTh->pPrev, runTh->pNext, runTh->tid);
-	printf(" *  status : %d,  \tbRunnable : %d   ptid : %u\n", runTh->status, runTh->bRunnable, runTh->parentTid);
+	printf(" *  Prev : %p,  \tNext : %p,     \ttid: %u\n",  runTh->pPrev, runTh->pNext, (unsigned int)(runTh->tid));
+	printf(" *  status : %d,  \tbRunnable : %d   ptid : %u\n", runTh->status, runTh->bRunnable, (unsigned int)(runTh->parentTid));
 	printf("\n------------------------------------------------------------------\n");
 }
 
@@ -209,8 +213,8 @@ void print(Queue queue)
 	while(temp != NULL)
 	{
 		printf("\nnode%2d(%p) ------------------------------------------------\n",i, temp);
-		printf(" *  Prev : %p,  \tNext : %p,     \ttid: %u\n",  temp->pPrev, temp->pNext, temp->tid);
-		printf(" *  status : %d,  \tbRunnable : %d   ptid : %u\n", temp->status, temp->bRunnable, temp->parentTid);
+		printf(" *  Prev : %p,  \tNext : %p,     \ttid: %u\n",  temp->pPrev, temp->pNext, (unsigned int)(temp->tid));
+		printf(" *  status : %d,  \tbRunnable : %d   ptid : %u\n", temp->status, temp->bRunnable, (unsigned int)(temp->parentTid));
 		temp = temp->pNext;
 		i++;
 	}
