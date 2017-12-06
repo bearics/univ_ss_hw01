@@ -90,13 +90,40 @@ int 	thread_join(thread_t thread, void **retval)
 
 int 	thread_suspend(thread_t tid)
 {
+	if(searchQueue(READY_QUEUE, tid) == NULL)
+		return -1; // no tid
+
+	runStop++;
+	pthread_mutex_lock(&mainMutex);
+
+	insertAtTail(WAITING_QUEUE, deleteNode(READY_QUEUE, tid));
+	
+	Thread* pth = searchQueue(WAITING_QUEUE, tid);	// find TCB in waiting queue
+
+	pth->status = THREAD_STATUS_BLOCKED;
+
+	runResume();
+	return 0;	// success!
 
 }
 
 
 int	thread_resume(thread_t tid)
 {
+	if(searchQueue(WAITING_QUEUE, tid) == NULL)
+		return -1; // no tid
 
+	runStop++;
+	pthread_mutex_lock(&mainMutex);
+
+	insertAtTail(READY_QUEUE, deleteNode(WAITING_QUEUE, tid));
+
+	Thread* pth = searchQueue(READY_QUEUE, tid);	// find TCB in waiting queue
+
+	pth->status = THREAD_STATUS_READY;
+
+	runResume();
+	return 0;	// success!
 }
 
 int thread_exit(void* retval)

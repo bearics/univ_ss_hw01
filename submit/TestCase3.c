@@ -5,7 +5,10 @@ void* Tc3ThreadProc(void* param)
 	thread_t tid = 0;
 	int *retVal; 
 	tid = thread_self();
-	while (1)
+	/////
+	int i=0;
+	//////
+	while (i++<5)
 	{
 		sleep(2);
 		printf("Tc3ThreadProc: my thread id:(%d), arg : %d\n", (int)tid, *((int*)param));
@@ -53,11 +56,11 @@ TestCase3(void)
 		
 		if(temp->status != 2)
 		{
-			printf("TestCase3: Thread is not suspended");
+			printf("TestCase3: Thread is not suspended\n");
 			assert(0);
 		}
 	}
-
+	printQ();
 	/* Resume thread sequentially */
 	for (i=0;i<TOTAL_THREAD_NUM;i++)
 	{
@@ -65,7 +68,7 @@ TestCase3(void)
 		
 		if(thread_resume(tid[i])==-1)
 		{
-			printf("Testcase3: Thread resume Failed");
+			printf("Testcase3: Thread resume Failed\n");
 			assert(0);
 		}
 	}
@@ -75,7 +78,7 @@ TestCase3(void)
 		int* retVal;
 		thread_join(tid[i],(void **)&retVal);
 
-		printf("Thread [ %d ] is finish Return : [ %d ] ",(int)tid[i], *retVal);
+		printf("Thread [ %d ] is finish Return : [ %d ]\n",(int)tid[i], *retVal);
 	}
 
 	return ;
