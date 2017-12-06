@@ -9,22 +9,17 @@
 
 int		RunScheduler( void )
 {
-	printf("running sch\n");
 	while(1)
 	{
 		pthread_mutex_lock(&mainMutex);
-		printf("b\n");
 		if(runStop != 0){
 			printf("wait!!\n");
-			printf("c\n");
 			pthread_cond_wait(&mainCond, &mainMutex);
 		}
-		printf("g?\n");
 		__ContextSwitch(runTh, ReadyQHead);
 		pthread_mutex_unlock(&mainMutex);
-		printQ();
+		//printQ();
 		sleep(TIMESLICE);
-		printf("a\n");
 		
 	}
 }

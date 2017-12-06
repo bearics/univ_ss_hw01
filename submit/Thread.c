@@ -28,40 +28,63 @@ int 	thread_join(thread_t thread, void **retval)
 	Thread* pth = NULL;
 	Thread* cth = NULL;
 	runStop++;
+	printf("join: self(%u), target(%u)\n", pthread_self(), thread);
 	pthread_mutex_lock(&mainMutex);
-	printf("Im(%u) join!!! = %u\n", pthread_self(), thread);
-	printQ();
-	if(searchQueue(WAITING_QUEUE, thread) == NULL)
-	{	
-		printf("Im waiting tid = %u\n", thread);
-		printQ();
-		if(runTh == NULL)
-			return -1;
-		pth = runTh;
-		insertAtTail(WAITING_QUEUE, pth);
-		runTh = NULL;
-		while(searchQueue(WAITING_QUEUE, thread) == NULL)
-		{
-			runResume();
-			__thread_wait_handler(0);
-			printf("join wake up!!\n"); 
-			pthread_mutex_lock(&mainMutex);
-		}
 
+	while(runTh == NULL){
+		printf("join(NULL): self(%u), target(%u)\n", pthread_self(), thread);
+		runResume();
+		__thread_wait_handler(0);
 		runStop++;
-		
-		insertAtTail(READY_QUEUE, pth);
-		deleteNode(WAITING_QUEUE, pth->tid);
-		printf("join wake up!! (%u) tid = %u\n", pthread_self() , thread);
+		pthread_mutex_lock(&mainMutex);
 	}
-	//printf("%u\n", thread);
-	cth=searchQueue(WAITING_QUEUE, thread);
+
+	pth = runTh;
+	cth = searchQueue(WAITING_QUEUE, thread);
+
+	
+	if(cth != NULL)
+	{
+		if(cth->status == THREAD_STATUS_ZOMBIE)
+		{	// reaping zombie at waiting Q
+			*retval = cth->pExitCode;
+			free(deleteNode(WAITING_QUEUE, thread)); // delete zombie
+			runResume();
+			return 0;	// success
+		}
+	}
+
+	// there is no zombie(thread)
+
+	pth->status = THREAD_STATUS_BLOCKED;
+	insertAtTail(WAITING_QUEUE, pth);
+	runTh = NULL;
+	do
+	{
+		runResume();
+		__thread_wait_handler(0);
+		runStop++;
+		pthread_mutex_lock(&mainMutex);
+		printf("finding...\n");
+		cth = searchQueue(WAITING_QUEUE, thread);
+		if( cth != NULL)
+			if(cth->status == THREAD_STATUS_ZOMBIE)
+				break;
+			else
+				cth = NULL;
+	} while (cth == NULL);
+
+	// now cth is zombie's node pointer
 	*retval = cth->pExitCode;
-	printf("delete tid = %u , %u\n", cth->tid, thread);
-	free(deleteNode(WAITING_QUEUE, cth->tid));
-	printQ();
+	free(deleteNode(WAITING_QUEUE, thread)); // delete zombie
+
+	// put parent thread to readyQ
+	pth->status = THREAD_STATUS_READY;
+	insertAtTail(READY_QUEUE, deleteNode(WAITING_QUEUE, pth->tid));
+
+
 	runResume();
-	return 0;
+	return 0;	// success
 }
 
 
@@ -83,19 +106,26 @@ int thread_exit(void* retval)
 	Thread* cth=NULL;
 	runStop++;
 	pthread_mutex_lock(&mainMutex);
+
 	cth = runTh;
-	printQ();
-	printf("exi: tid=%u\n", pthread_self());
+
+	if(runTh == NULL){
+		printf("exit: self(%u)\n", pthread_self());
+		printQ();
+	}
+
+	//printQ();
+	//printf("exi: tid=%u\n", pthread_self());
+
+
 	cth->pExitCode = retval;
 	cth->status = THREAD_STATUS_ZOMBIE;
 	insertAtTail(WAITING_QUEUE, cth);
-	while((cth = searchQueue(WAITING_QUEUE, cth->tid)) == NULL){}
 	runTh = NULL;
-
-	if( (pth = searchQueue(WAITING_QUEUE, cth->parentTid)) != NULL)
+	if((pth = searchQueue(WAITING_QUEUE, cth->parentTid)) != NULL)
 		__thread_wakeup(pth);
-
 	runResume();
+	//printf("fin exit\n");
 	return 0;
 }
 

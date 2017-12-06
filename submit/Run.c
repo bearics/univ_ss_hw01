@@ -139,38 +139,36 @@ Thread* deleteNode(Queue queue, thread_t tid)
 {
 	Thread** pHead = selectQHead(queue);
 	Thread** pTail = selectQTail(queue);
-	Thread* del = *pHead;
-	Thread* pre = NULL;
+	Thread* del = searchQueue(queue, tid);
+	Thread* tmp = NULL;
 
-	if( *pHead == NULL )
-		return 0;
+	if( *pHead == NULL || del == NULL)
+		return NULL;
 
-	while(del->tid != tid)
-	{
-		if(del->pNext == NULL)
-			return NULL;	// can't find tid
-		else
-		{
-			pre = del;	// save current node
-			del = del->pNext;
-		}
-	}
+	if( *pHead == del )
+		*pHead = del->pNext;
 
-	if(del == *pHead)
-		*pHead = (*pHead)->pNext;
-	else
+	if( del->pNext != NULL )
+		del->pNext->pPrev = del->pPrev;
+
+	if( del->pPrev != NULL)
 		del->pPrev->pNext = del->pNext;
 
-	if(del == *pTail)
-		*pTail = del->pPrev;
-	else
-		del->pNext->pPrev = del->pPrev;
-	
 	if(*pHead == NULL)
 		*pTail = NULL;
-
+	else
+	{
+		tmp = *pHead;	
+		while(tmp->pNext != NULL )
+		{
+			tmp = tmp->pNext;
+		}
+		*pTail = tmp;
+	}
+	
 	del->pNext = NULL;
 	del->pPrev = NULL;
+
 	return del;
 }
 

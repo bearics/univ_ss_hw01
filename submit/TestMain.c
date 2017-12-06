@@ -28,19 +28,37 @@ void* hi(void* w)
 
 void hyounglin()
 {
-	pthread_t tid1, tid2, tid3;
+	pthread_t tid1 = (pthread_t)0;
+	pthread_t tid2 = (pthread_t)0;
+	pthread_t tid3 = (pthread_t)0;
+	pthread_t tid4 = (pthread_t)0;
+	pthread_t tid5 = (pthread_t)0;
 
-	int a=7;
+	Thread th1;
+	th1.tid = (pthread_t)1;
+	Thread th2;
+	th2.tid = (pthread_t)2;
+	Thread th3;
+	th3.tid = (pthread_t)3;
+	Thread th4;
+	th4.tid = (pthread_t)4;
+	Thread th5;
+	th5.tid = (pthread_t)5;
 
-	thread_create(&tid1, NULL, (void*)hi, (void*)&a);
+	insertAtTail(READY_QUEUE, &th1);
+	insertAtTail(READY_QUEUE, &th2);
+	insertAtTail(READY_QUEUE, &th3);
+	insertAtTail(READY_QUEUE, &th4);
+	insertAtTail(READY_QUEUE, &th5);
 
-	print(READY_QUEUE);
+	printQ();
 
-	sleep(2);
-	__thread_wakeup(searchQueue(READY_QUEUE, tid1));
-	
-	printf("tid : %u\n", tid1);
+	insertAtTail(WAITING_QUEUE, deleteNode(READY_QUEUE, (pthread_t)5 ));
+	printQ();
 
+	insertAtTail(READY_QUEUE, deleteNode(WAITING_QUEUE, (pthread_t)5 ));
+
+	printQ();
 	while(1){}
 
 
