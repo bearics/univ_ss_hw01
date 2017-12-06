@@ -1,9 +1,9 @@
 #include "TestCase3.h"
- 
+
 void* Tc3ThreadProc(void* param)
 {
 	thread_t tid = 0;
-    int *retVal; 
+	int *retVal; 
 	tid = thread_self();
 	while (1)
 	{
@@ -19,20 +19,21 @@ void* Tc3ThreadProc(void* param)
  * - TestCase3 tests suspending, resuming and deleting Threads. 
  * - Testing API scopes: thread_suspend, thread_resume, thread_cancel,thread_self
  */
- 
+
 void
 TestCase3(void)
 {
+	int i1=1, i2=2, i3=3, i4=4, i5=5;
 	thread_t tid[TOTAL_THREAD_NUM];
 	int i = 0;
 	int j = 0;
 	signal(SIGCHLD,SIG_IGN);
 	
-	thread_create(&tid[0], NULL, (void*)Tc3ThreadProc, (void*)1);	
-	thread_create(&tid[1], NULL, (void*)Tc3ThreadProc, (void*)2);	
-	thread_create(&tid[2], NULL, (void*)Tc3ThreadProc, (void*)3);	
-    thread_create(&tid[3], NULL, (void*)Tc3ThreadProc, (void*)4);	
-    thread_create(&tid[4], NULL, (void*)Tc3ThreadProc, (void*)5);	
+	thread_create(&tid[0], NULL, (void*)Tc3ThreadProc,(void*) &i1);	
+	thread_create(&tid[1], NULL, (void*)Tc3ThreadProc,(void*) &i2);	
+	thread_create(&tid[2], NULL, (void*)Tc3ThreadProc,(void*) &i3);	
+	thread_create(&tid[3], NULL, (void*)Tc3ThreadProc,(void*) &i4);	
+	thread_create(&tid[4], NULL, (void*)Tc3ThreadProc,(void*) &i5);	
 
 	/* Suspend all thread */
 	for (i = 0; i < TOTAL_THREAD_NUM;i++)
@@ -67,6 +68,14 @@ TestCase3(void)
 			printf("Testcase3: Thread resume Failed");
 			assert(0);
 		}
+	}
+
+	for(i=0;i<TOTAL_THREAD_NUM;i++)
+	{
+		int* retVal;
+		thread_join(tid[i],(void **)&retVal);
+
+		printf("Thread [ %d ] is finish Return : [ %d ] ",(int)tid[i], *retVal);
 	}
 
 	return ;

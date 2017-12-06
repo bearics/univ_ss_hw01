@@ -15,18 +15,15 @@ void *__wrapperFunc(void* arg)
 	sigemptyset(&set);
 	sigaddset(&set, SIGUSR1);
 	signal(SIGUSR1, __thread_wait_handler);
-	
-	while(searchQueue(READY_QUEUE, pthread_self()) == NULL) {} // 
+	while(searchQueue(READY_QUEUE, pthread_self()) == NULL) {} 
 	__thread_wait_handler(0);
 	ret = (*(pArg->funcPtr))(pArg->funcArg);
 	free(arg);
-	printf("byebye\n");
 	return ret;
 }
 
 void __thread_wakeup(Thread* pTh)
 {
-	printf("wake up tid : %u \n", pTh->tid);
 	pthread_mutex_lock(&(pTh->readyMutex));
 	pTh->bRunnable = TRUE;
 	pthread_cond_signal(&(pTh->readyCond));
@@ -36,9 +33,24 @@ void __thread_wakeup(Thread* pTh)
 void __thread_wait_handler(int signo)
 {
 	Thread* pTh;
-	pTh = searchQueue(READY_QUEUE, pthread_self());
+	if((pTh = searchQueue(READY_QUEUE, pthread_self())) == NULL){
+		if((pTh = searchQueue(WAITING_QUEUE, pthread_self())) == NULL){
+			pTh = runTh;
+		}
+	}
+	if(pTh == NULL){
+		//printf("%u\n",pthread_self());
+		printQ();
+		//printf("wait!!=null\n");	
+	}
+	else
+		// printf("wait!!=%u\n", pTh->tid);
+	pTh->bRunnable = FALSE;
 	pthread_mutex_lock(&(pTh->readyMutex));
+	// printf("hello tid=%u\n", pTh->tid);
+	waitCreate=1;
 	while (pTh->bRunnable == FALSE){
+		// printf("im sleep tid=%u\n", pTh->tid);
 		pthread_cond_wait(&(pTh->readyCond), &(pTh->readyMutex));
 	}
 	pthread_mutex_unlock(&(pTh->readyMutex));
@@ -80,7 +92,7 @@ Thread* createNode(thread_t tid)
 	return newNode;
 }
 
-void	insertAtTail(Queue queue, Thread* pth)
+Thread*	insertAtTail(Queue queue, Thread* pth)
 {
 	Thread** pHead = selectQHead(queue);
 	Thread** pTail = selectQTail(queue);
@@ -89,13 +101,13 @@ void	insertAtTail(Queue queue, Thread* pth)
 	{
 		*pHead = pth;
 		*pTail = pth;
-		return;
+		return pth;
 	}
 	
 	(*pTail)->pNext = pth;
 	pth->pPrev = *pTail;
 	*pTail = pth;
-	return;
+	return pth;
 }
 
 
@@ -172,6 +184,18 @@ Thread* searchQueue(Queue queue, thread_t tid)
 	return temp;
 }
 
+void printRunningTh()
+{
+	if(runTh == NULL)
+	{
+		printf("\n---------------------------No Running Th--------------------------\n");
+		return;
+	}
+	printf("\n----------------------------------Running Th----------------------\n");
+	printf(" *  Prev : %p,  \tNext : %p,     \ttid: %u\n",  runTh->pPrev, runTh->pNext, runTh->tid);
+	printf(" *  status : %d,  \tbRunnable : %d   ptid : %u\n", runTh->status, runTh->bRunnable, runTh->parentTid);
+	printf("\n------------------------------------------------------------------\n");
+}
 
 void print(Queue queue)
 {
@@ -185,10 +209,25 @@ void print(Queue queue)
 	{
 		printf("\nnode%2d(%p) ------------------------------------------------\n",i, temp);
 		printf(" *  Prev : %p,  \tNext : %p,     \ttid: %u\n",  temp->pPrev, temp->pNext, temp->tid);
-		printf(" *  status : %d,  \tbRunnable : %d\n", temp->status, temp->bRunnable);
+		printf(" *  status : %d,  \tbRunnable : %d   ptid : %u\n", temp->status, temp->bRunnable, temp->parentTid);
 		temp = temp->pNext;
 		i++;
 	}
 	printf("\n");
 }
 
+void runResume()
+{
+	pthread_cond_signal(&mainCond);
+	pthread_mutex_unlock(&mainMutex);
+	if(--runStop < 0)
+		runStop=0;
+	return;
+}
+void printQ()
+{
+	print(READY_QUEUE);
+	printf("0000000000000000000000000000000000000000000000000\n");
+	print(WAITING_QUEUE);
+	printRunningTh();	
+}

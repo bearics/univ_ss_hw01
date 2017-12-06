@@ -16,29 +16,32 @@
 // #include "ObjMgr.h"
 // #include "Scheduler.h"
 
+void* hi(void* w)
+{
+	printf("here??\n");	
+	while(1)
+	{
+		printf("=%d\n", *((int*)w));
+		sleep(1);
+	}
+}
+
 void hyounglin()
 {
 	pthread_t tid1, tid2, tid3;
-	print(READY_QUEUE);
-	print(WAITING_QUEUE);
-	insertAtTail(READY_QUEUE, createNode((pthread_t)0));
+
+	int a=7;
+
+	thread_create(&tid1, NULL, (void*)hi, (void*)&a);
 
 	print(READY_QUEUE);
-	print(WAITING_QUEUE);
-	insertAtTail(READY_QUEUE, createNode((pthread_t)1));
 
-	print(READY_QUEUE);
-	print(WAITING_QUEUE);
-	insertAtTail(READY_QUEUE, createNode((pthread_t)2));
+	sleep(2);
+	__thread_wakeup(searchQueue(READY_QUEUE, tid1));
+	
+	printf("tid : %u\n", tid1);
 
-	print(READY_QUEUE);
-	print(WAITING_QUEUE);
-
-
-	insertAtTail(WAITING_QUEUE ,deleteNode(READY_QUEUE, (pthread_t)1));
-	print(READY_QUEUE);
-	print(WAITING_QUEUE);
-
+	while(1){}
 
 
 	return;

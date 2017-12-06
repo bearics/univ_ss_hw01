@@ -12,6 +12,8 @@ typedef enum{
 }Queue;
 
 /* main mutex and cond */
+int runStop;
+int waitCreate;
 pthread_mutex_t mainMutex;
 pthread_cond_t mainCond;
 
@@ -26,11 +28,14 @@ void __thread_wait_handler(int signo);
 /* node funtions */
 Thread* createNode(thread_t tid);
 Thread**	selectQueue(Queue queue);
-void	insertAtTail(Queue queue, Thread* pth);
+Thread*	insertAtTail(Queue queue, Thread* pth);
 Thread*	deleteAtFirst(Queue queue);
 Thread* deleteNode(Queue queue, thread_t tid);
 Thread* searchQueue(Queue queue, thread_t tid);
 void	print(Queue queue);
+void printRunningTh();
+void runResume();
+void printQ();
 
 
 #endif /* _RUN_H_ */
